@@ -2,8 +2,8 @@ using HarmonyLib;
 
 namespace AdofaiQolMod;
 
-[HarmonyPatch(typeof(scrController), nameof(scrController.StartLoadingScene))]
-internal static class scrController_StartLoadingScene
+[HarmonyPatch(typeof(scrCalibrationLine), nameof(scrCalibrationLine.Awake))]
+internal static class scrCalibrationLine_Awake
 {
     private static void Postfix()
     {

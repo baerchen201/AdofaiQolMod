@@ -1,5 +1,5 @@
 using System;
-using System.Globalization;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -7,44 +7,46 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 
 namespace AdofaiQolMod;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class AdofaiQolMod : BaseUnityPlugin
 {
+    private const string PLACEHOLDER = "...";
+    private TextMeshProUGUI? accuracy;
+
+    private ConfigEntry<string> accuracyFormat = null!;
+
+    private ConfigEntry<TextAnchor> anchor = null!;
+    private ConfigEntry<float> fontSize = null!;
+
+    private ConfigEntry<bool> hidePerfect = null!;
+    private ConfigEntry<float> horizontalOffset = null!;
+
+    private GameObject modCanvas = null!;
+
+    private ConfigEntry<bool> overrideAllowDebug = null!;
+    private TextMeshProUGUI? percentage;
+    private ConfigEntry<string> percentageFormat = null!;
+    private RectTransform? progressDisplay;
+    private ConfigEntry<float> spacing = null!;
+    private ConfigEntry<int> verticalOffset = null!;
+    private TextMeshProUGUI? xAccuracy;
+    private ConfigEntry<string> xAccuracyFormat = null!;
     public static AdofaiQolMod Instance { get; private set; } = null!;
     internal static new ManualLogSource Logger { get; private set; } = null!;
     internal static Harmony? Harmony { get; set; }
-
-    private ConfigEntry<bool> hidePerfect = null!;
     public bool HidePerfect => hidePerfect.Value;
-
-    private ConfigEntry<string> accuracyFormat = null!;
+    public bool OverrideAllowDebug => overrideAllowDebug.Value;
     public string AccuracyFormat => accuracyFormat.Value;
-    private ConfigEntry<string> xAccuracyFormat = null!;
     public string XAccuracyFormat => xAccuracyFormat.Value;
-    private ConfigEntry<string> percentageFormat = null!;
     public string PercentageFormat => percentageFormat.Value;
-
-    private ConfigEntry<TextAnchor> anchor = null!;
     public TextAnchor Anchor => anchor.Value;
-    private ConfigEntry<int> verticalOffset = null!;
     public int VerticalOffset => verticalOffset.Value;
-    private ConfigEntry<float> horizontalOffset = null!;
     public float HorizontalOffset => horizontalOffset.Value;
-    private ConfigEntry<float> spacing = null!;
     public float Spacing => spacing.Value;
-    private ConfigEntry<float> fontSize = null!;
     public float FontSize => fontSize.Value;
-
-    private GameObject modCanvas = null!;
-    private RectTransform? progressDisplay;
-    private TextMeshProUGUI? accuracy;
-    private TextMeshProUGUI? xAccuracy;
-    private TextMeshProUGUI? percentage;
 
     private void Awake()
     {
@@ -52,6 +54,12 @@ public class AdofaiQolMod : BaseUnityPlugin
         Instance = this;
 
         hidePerfect = Config.Bind("General", "HidePerfect", true, "Hides the \"Perfect\" score");
+        overrideAllowDebug = Config.Bind(
+            "General",
+            "OverrideAllowDebug",
+            true,
+            "Force-enables debug features"
+        );
 
         accuracyFormat = Config.Bind(
             "ProgressDisplay",
@@ -131,7 +139,7 @@ public class AdofaiQolMod : BaseUnityPlugin
         progressDisplay = (RectTransform)container.transform;
         progressDisplay.pivot = progressDisplay.anchorMin = Vector2.zero;
         progressDisplay.anchorMax = Vector2.one;
-        progressDisplay.parent = modCanvas.transform;
+        progressDisplay.SetParent(modCanvas.transform, false);
         progressDisplay.anchoredPosition = Vector2.zero;
         progressDisplay.offsetMin = new Vector2(HorizontalOffset, 0f);
         progressDisplay.offsetMax = new Vector2(0f, -VerticalOffset);
@@ -142,31 +150,39 @@ public class AdofaiQolMod : BaseUnityPlugin
         if (!string.IsNullOrWhiteSpace(AccuracyFormat))
         {
             var accuracyObject = new GameObject("Accuracy", typeof(RectTransform));
-            ((RectTransform)accuracyObject.transform).parent = progressDisplay;
+            ((RectTransform)accuracyObject.transform).SetParent(progressDisplay, false);
             accuracy = accuracyObject.AddComponent<TextMeshProUGUI>();
             accuracy.fontSize = FontSize;
         }
         else
+        {
             accuracy = null;
+        }
 
         if (!string.IsNullOrWhiteSpace(XAccuracyFormat))
         {
             var xAccuracyObject = new GameObject("XAccuracy", typeof(RectTransform));
-            ((RectTransform)xAccuracyObject.transform).parent = progressDisplay;
+            ((RectTransform)xAccuracyObject.transform).SetParent(progressDisplay, false);
             xAccuracy = xAccuracyObject.AddComponent<TextMeshProUGUI>();
             xAccuracy.fontSize = FontSize;
         }
         else
+        {
             xAccuracy = null;
+        }
+
         if (!string.IsNullOrWhiteSpace(PercentageFormat))
         {
             var percentageObject = new GameObject("Percentage", typeof(RectTransform));
-            ((RectTransform)percentageObject.transform).parent = progressDisplay;
+            ((RectTransform)percentageObject.transform).SetParent(progressDisplay, false);
             percentage = percentageObject.AddComponent<TextMeshProUGUI>();
             percentage.fontSize = FontSize;
         }
         else
+        {
             percentage = null;
+        }
+
         UpdateProgressDisplay();
     }
 
@@ -189,6 +205,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             {
                 accuracy.text = INVALID;
             }
+
         if (xAccuracy != null)
             try
             {
@@ -198,6 +215,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             {
                 xAccuracy.text = INVALID;
             }
+
         if (percentage != null)
             try
             {
@@ -208,8 +226,6 @@ public class AdofaiQolMod : BaseUnityPlugin
                 percentage.text = INVALID;
             }
     }
-
-    private const string PLACEHOLDER = "...";
 
     public void UpdateProgressDisplay(bool show = true)
     {
@@ -237,6 +253,7 @@ public class AdofaiQolMod : BaseUnityPlugin
                 p = $"{__instance.percentComplete * 100f:0.##}%";
         }
         catch (NullReferenceException) { }
+
         UpdateProgressDisplay(
             float.IsNaN(__instance.mistakesManager.percentAcc)
                 ? PLACEHOLDER
@@ -248,5 +265,15 @@ public class AdofaiQolMod : BaseUnityPlugin
         );
     }
 
-    private void LayoutSettingChanged(object _, EventArgs e) => RebuildProgressDisplay();
+    private void LayoutSettingChanged(object _, EventArgs e)
+    {
+        RebuildProgressDisplay();
+    }
+
+    public static string GetVersionText()
+    {
+        return $"{MyPluginInfo.PLUGIN_NAME} ({typeof(BuildInformation)
+            .GetCustomAttribute<BuildInformation.BuildTimeAttribute>()
+            ?.ToString() ?? "Build time unknown"})";
+    }
 }

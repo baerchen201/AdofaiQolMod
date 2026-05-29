@@ -2,8 +2,8 @@ using HarmonyLib;
 
 namespace AdofaiQolMod;
 
-[HarmonyPatch(typeof(scrController), nameof(scrController.Hit))]
-internal static class scrController_Hit
+[HarmonyPatch(typeof(scrPlanet), nameof(scrPlanet.SwitchChosen))]
+internal static class scrPlanet_SwitchChosen
 {
     private static void Postfix(ref scrController __instance)
     {

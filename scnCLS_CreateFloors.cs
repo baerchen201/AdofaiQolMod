@@ -1,60 +1,69 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection.Emit;
+using System.Text;
 using HarmonyLib;
 
 namespace AdofaiQolMod;
 
-[HarmonyPatch(typeof(scnCLS), "CreateFloors")]
+[HarmonyPatch(typeof(scnCLS), nameof(scnCLS.CreateFloors))]
 internal static class scnCLS_CreateFloors
 {
     private static IEnumerable<CodeInstruction> Transpiler(
         IEnumerable<CodeInstruction> instructions,
         ILGenerator generator
-    ) =>
-        new CodeMatcher(instructions, generator)
+    )
+    {
+        return new CodeMatcher(instructions, generator)
             .MatchForward(
-                false,
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(File), nameof(File.Exists)))
+                new CodeMatch(
+                    OpCodes.Call,
+                    AccessTools.Method(typeof(RDFile), nameof(RDFile.Exists))
+                )
             )
             .SetInstruction(
                 new CodeInstruction(
                     OpCodes.Call,
-                    AccessTools.Method(typeof(scnCLS_CreateFloors), nameof(a))
+                    AccessTools.Method(typeof(scnCLS_CreateFloors), nameof(RDFile_Exists))
                 )
             )
             .MatchForward(
-                false,
                 new CodeMatch(
                     OpCodes.Call,
                     AccessTools.Method(
-                        typeof(File),
-                        nameof(File.WriteAllLines),
-                        [typeof(string), typeof(IEnumerable<string>)]
+                        typeof(RDFile),
+                        nameof(RDFile.WriteAllLines),
+                        [typeof(string), typeof(IEnumerable<string>), typeof(Encoding)]
                     )
                 )
             )
             .Advance(1)
             .MatchForward(
-                false,
                 new CodeMatch(
                     OpCodes.Call,
                     AccessTools.Method(
-                        typeof(File),
-                        nameof(File.WriteAllLines),
-                        [typeof(string), typeof(IEnumerable<string>)]
+                        typeof(RDFile),
+                        nameof(RDFile.WriteAllLines),
+                        [typeof(string), typeof(IEnumerable<string>), typeof(Encoding)]
                     )
                 )
             )
             .SetInstruction(
                 new CodeInstruction(
                     OpCodes.Call,
-                    AccessTools.Method(typeof(scnCLS_CreateFloors), nameof(b))
+                    AccessTools.Method(typeof(scnCLS_CreateFloors), nameof(RDFile_WriteAllLines))
                 )
             )
             .InstructionEnumeration();
+    }
 
-    private static bool a(string _) => false;
+    private static bool RDFile_Exists(string path)
+    {
+        return false;
+    }
 
-    private static void b(string path, IEnumerable<string> contents) { }
+    private static void RDFile_WriteAllLines(
+        string path,
+        IEnumerable<string> content,
+        Encoding encoding
+    ) { }
 }
