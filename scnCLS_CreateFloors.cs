@@ -36,17 +36,6 @@ internal static class scnCLS_CreateFloors
                     )
                 )
             )
-            .Advance(1)
-            .MatchForward(
-                new CodeMatch(
-                    OpCodes.Call,
-                    AccessTools.Method(
-                        typeof(RDFile),
-                        nameof(RDFile.WriteAllLines),
-                        [typeof(string), typeof(IEnumerable<string>), typeof(Encoding)]
-                    )
-                )
-            )
             .SetInstruction(
                 new CodeInstruction(
                     OpCodes.Call,
