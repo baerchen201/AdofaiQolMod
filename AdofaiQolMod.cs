@@ -237,32 +237,30 @@ public class AdofaiQolMod : BaseUnityPlugin
         if (!show)
             return;
 
-        if (scrController.instance != null)
+        if (scrController.instance)
             UpdateProgressDisplay(scrController.instance);
         else
             UpdateProgressDisplay(PLACEHOLDER, PLACEHOLDER, PLACEHOLDER);
     }
 
-    public void UpdateProgressDisplay(scrController __instance)
+    private void UpdateProgressDisplay(scrController __instance)
     {
         Logger.LogDebug($">> UpdateProgressDisplay(__instance: {__instance})");
-        var p = PLACEHOLDER;
-        try
-        {
-            if (!float.IsNaN(__instance.percentComplete))
-                p = $"{__instance.percentComplete * 100f:0.##}%";
-        }
-        catch (NullReferenceException) { }
 
-        UpdateProgressDisplay(
-            float.IsNaN(__instance.mistakesManager.percentAcc)
-                ? PLACEHOLDER
-                : $"{__instance.mistakesManager.percentAcc * 100f:0.##}%",
-            float.IsNaN(__instance.mistakesManager.percentXAcc)
-                ? PLACEHOLDER
-                : $"{__instance.mistakesManager.percentXAcc * 100f:0.##}%",
-            p
-        );
+        if (!__instance.gameworld)
+            UpdateProgressDisplay(false);
+        else
+            UpdateProgressDisplay(
+                float.IsNaN(__instance.mistakesManager.percentAcc)
+                    ? PLACEHOLDER
+                    : $"{__instance.mistakesManager.percentAcc * 100f:0.##}%",
+                float.IsNaN(__instance.mistakesManager.percentXAcc)
+                    ? PLACEHOLDER
+                    : $"{__instance.mistakesManager.percentXAcc * 100f:0.##}%",
+                float.IsNaN(__instance.percentComplete)
+                    ? PLACEHOLDER
+                    : $"{__instance.percentComplete * 100f:0.##}%"
+            );
     }
 
     private void LayoutSettingChanged(object _, EventArgs e)
