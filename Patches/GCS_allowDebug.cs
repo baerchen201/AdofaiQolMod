@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(GCS), nameof(GCS.allowDebug), MethodType.Getter)]
 internal static class GCS_allowDebug

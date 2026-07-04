@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scrCalibrationLine), nameof(scrCalibrationLine.Awake))]
 internal static class scrCalibrationLine_Awake

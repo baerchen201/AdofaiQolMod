@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scnEditor), nameof(scnEditor.ResetScene))]
 internal static class scnEditor_ResetScene

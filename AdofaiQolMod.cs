@@ -7,6 +7,9 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+#if !DEBUG
+using System.Runtime.CompilerServices;
+#endif
 
 namespace AdofaiQolMod;
 
@@ -37,11 +40,41 @@ public class AdofaiQolMod : BaseUnityPlugin
     public static AdofaiQolMod Instance { get; private set; } = null!;
     internal static new ManualLogSource Logger { get; private set; } = null!;
     internal static Harmony? Harmony { get; set; }
-    public bool HidePerfect => hidePerfect.Value;
+
+    public bool HidePerfect
+    {
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        get => hidePerfect.Value;
+    }
+
     public bool OverrideAllowDebug => overrideAllowDebug.Value;
-    public string AccuracyFormat => accuracyFormat.Value;
-    public string XAccuracyFormat => xAccuracyFormat.Value;
-    public string PercentageFormat => percentageFormat.Value;
+
+    public string AccuracyFormat
+    {
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        get => accuracyFormat.Value;
+    }
+
+    public string XAccuracyFormat
+    {
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        get => xAccuracyFormat.Value;
+    }
+
+    public string PercentageFormat
+    {
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        get => percentageFormat.Value;
+    }
+
     public TextAnchor Anchor => anchor.Value;
     public int VerticalOffset => verticalOffset.Value;
     public float HorizontalOffset => horizontalOffset.Value;
@@ -115,25 +148,29 @@ public class AdofaiQolMod : BaseUnityPlugin
         RebuildProgressDisplay();
         UpdateProgressDisplay(false);
 
-        Patch();
+        Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
+        Logger.LogDebug("Patching...");
+        Harmony.PatchAll();
+        Logger.LogDebug("Finished patching!");
 
         Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} has loaded!");
-        return;
-
-        void Patch()
-        {
-            Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
-            Logger.LogDebug("Patching...");
-            Harmony.PatchAll();
-            Logger.LogDebug("Finished patching!");
-        }
+#if DEBUG
+        Logger.LogWarning(
+            "This is a debug build of the mod. Performance may be negatively impacted and logs may be spammed."
+        );
+#endif
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public void RebuildProgressDisplay()
     {
+#if DEBUG
         Logger.LogDebug(
             $">> RebuildProgressDisplay() modCanvas:{modCanvas} progressDisplay:{progressDisplay} "
         );
+#endif
         Destroy(progressDisplay?.gameObject);
         var container = new GameObject("ProgressDisplay", typeof(RectTransform));
         progressDisplay = (RectTransform)container.transform;
@@ -186,6 +223,9 @@ public class AdofaiQolMod : BaseUnityPlugin
         UpdateProgressDisplay();
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public void UpdateProgressDisplay(
         string accuracyValue,
         string xAccuracyValue,
@@ -193,9 +233,11 @@ public class AdofaiQolMod : BaseUnityPlugin
     )
     {
         const string INVALID = "<i>Invalid format string</i>";
+#if DEBUG
         Logger.LogDebug(
             $">> UpdateProgressDisplay(accuracyValue: {accuracyValue}, xAccuracyValue: {xAccuracyValue}, percentageValue: {percentageValue}) accuracy:{accuracy} xAccuracy:{xAccuracy} percentage:{percentage}"
         );
+#endif
         if (accuracy != null)
             try
             {
@@ -227,11 +269,16 @@ public class AdofaiQolMod : BaseUnityPlugin
             }
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public void UpdateProgressDisplay(bool show = true)
     {
+#if DEBUG
         Logger.LogDebug(
             $">> UpdateProgressDisplay(show: {show}) progressDisplay:{progressDisplay} accuracy:{accuracy} xAccuracy:{xAccuracy} percentage:{percentage}"
         );
+#endif
         progressDisplay?.gameObject.SetActive(show);
 
         if (!show)
@@ -243,9 +290,14 @@ public class AdofaiQolMod : BaseUnityPlugin
             UpdateProgressDisplay(PLACEHOLDER, PLACEHOLDER, PLACEHOLDER);
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     private void UpdateProgressDisplay(scrController __instance)
     {
+#if DEBUG
         Logger.LogDebug($">> UpdateProgressDisplay(__instance: {__instance})");
+#endif
 
         if (!__instance.gameworld)
             UpdateProgressDisplay(false);
@@ -270,8 +322,15 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     public static string GetVersionText()
     {
-        return $"{MyPluginInfo.PLUGIN_NAME} ({typeof(BuildInformation)
-            .GetCustomAttribute<BuildInformation.BuildTimeAttribute>()
-            ?.ToString() ?? "Build time unknown"})";
+        return $"{MyPluginInfo.PLUGIN_NAME} ("
+            +
+#if DEBUG
+            "DEBUG"
+#else
+            "RELEASE"
+#endif
+            + $" build at {typeof(BuildInformation)
+                   .GetCustomAttribute<BuildInformation.BuildTimeAttribute>()
+                   ?.ToString() ?? "[UNKNOWN]"})";
     }
 }

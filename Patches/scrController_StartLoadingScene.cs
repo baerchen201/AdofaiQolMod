@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scrController), nameof(scrController.StartLoadingScene))]
 internal static class scrController_StartLoadingScene

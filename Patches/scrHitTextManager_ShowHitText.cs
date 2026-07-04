@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scrHitTextManager), nameof(scrHitTextManager.ShowHitText))]
 internal static class scrHitTextManager_ShowHitText

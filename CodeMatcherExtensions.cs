@@ -1,16 +1,21 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 
 namespace AdofaiQolMod;
 
 internal static class CodeMatcherExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string MatchesToString(params CodeMatch[] matches)
     {
         return string.Join(';', matches.Select(i => i.ToString()));
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     internal static CodeMatcher MatchForward(
         this CodeMatcher codeMatcher,
         params CodeMatch[] matches
@@ -31,6 +36,9 @@ internal static class CodeMatcherExtensions
         return codeMatcher;
     }
 
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     internal static CodeMatcher MatchBack(this CodeMatcher codeMatcher, params CodeMatch[] matches)
     {
         var pos = Math.Clamp(codeMatcher.Pos, 0, codeMatcher.Length - 1);
@@ -48,7 +56,8 @@ internal static class CodeMatcherExtensions
         return codeMatcher;
     }
 
-    [Obsolete] // Not Obsolete but should be removed before release
+#if DEBUG
+    [Obsolete("Logs should be removed before release")]
     internal static CodeMatcher LogDebug(this CodeMatcher codeMatcher)
     {
         var pos = 0;
@@ -57,4 +66,5 @@ internal static class CodeMatcherExtensions
         );
         return codeMatcher;
     }
+#endif
 }

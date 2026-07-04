@@ -1,9 +1,9 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
-[HarmonyPatch(typeof(scnGame), nameof(scnGame.Play))]
-internal static class scnGame_Play
+[HarmonyPatch(typeof(scrPlayer), nameof(scrPlayer.Hit))]
+internal static class scrPlayer_Hit
 {
     private static void Postfix()
     {

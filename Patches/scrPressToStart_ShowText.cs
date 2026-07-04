@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scrPressToStart), nameof(scrPressToStart.ShowText))]
 internal static class scrPressToStart_ShowText

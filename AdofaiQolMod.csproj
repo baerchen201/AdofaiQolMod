@@ -59,6 +59,10 @@
     <Reference Include="UnityEngine.UI" HintPath="lib/UnityEngine.UI.dll" Private="false" />
     <Reference Include="Unity.TextMeshPro" HintPath="lib/Unity.TextMeshPro.dll" Private="false" />
   </ItemGroup>
+  <PropertyGroup>
+    <!-- Disables a version conflict warning for System.IO.Compression (between netstandard2.1 and Assembly-Csharp -->
+    <NoWarn>MSB3277</NoWarn>
+  </PropertyGroup>
   <Target Name="Date" BeforeTargets="BeforeBuild">
     <WriteLinesToFile
       File="$(IntermediateOutputPath)gen.cs"

@@ -3,7 +3,7 @@ using System.Reflection.Emit;
 using System.Text;
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scnCLS), nameof(scnCLS.CreateFloors))]
 internal static class scnCLS_CreateFloors

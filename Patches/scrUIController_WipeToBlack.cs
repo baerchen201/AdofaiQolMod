@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace AdofaiQolMod;
+namespace AdofaiQolMod.Patches;
 
 [HarmonyPatch(typeof(scrUIController), nameof(scrUIController.WipeToBlack))]
 internal static class scrUIController_WipeToBlack
