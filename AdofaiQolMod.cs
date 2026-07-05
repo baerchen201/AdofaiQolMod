@@ -17,29 +17,13 @@ namespace AdofaiQolMod;
 public class AdofaiQolMod : BaseUnityPlugin
 {
     private const string PLACEHOLDER = "...";
-    private TextMeshProUGUI? accuracy;
 
-    private ConfigEntry<string> accuracyFormat = null!;
-
-    private ConfigEntry<TextAnchor> anchor = null!;
-    private ConfigEntry<float> fontSize = null!;
+    #region Config - General
 
     private ConfigEntry<bool> hidePerfect = null!;
-    private ConfigEntry<float> horizontalOffset = null!;
-
-    private GameObject modCanvas = null!;
-
+#if DEBUG
     private ConfigEntry<bool> overrideAllowDebug = null!;
-    private TextMeshProUGUI? percentage;
-    private ConfigEntry<string> percentageFormat = null!;
-    private RectTransform? progressDisplay;
-    private ConfigEntry<float> spacing = null!;
-    private ConfigEntry<int> verticalOffset = null!;
-    private TextMeshProUGUI? xAccuracy;
-    private ConfigEntry<string> xAccuracyFormat = null!;
-    public static AdofaiQolMod Instance { get; private set; } = null!;
-    internal static new ManualLogSource Logger { get; private set; } = null!;
-    internal static Harmony? Harmony { get; set; }
+#endif
 
     public bool HidePerfect
     {
@@ -49,7 +33,23 @@ public class AdofaiQolMod : BaseUnityPlugin
         get => hidePerfect.Value;
     }
 
+#if DEBUG
     public bool OverrideAllowDebug => overrideAllowDebug.Value;
+#endif
+
+    #endregion
+
+    #region Config - ProgressDisplay
+
+    private ConfigEntry<string> accuracyFormat = null!;
+    private ConfigEntry<string> xAccuracyFormat = null!;
+    private ConfigEntry<string> percentageFormat = null!;
+
+    private ConfigEntry<TextAnchor> anchor = null!;
+    private ConfigEntry<int> verticalOffset = null!;
+    private ConfigEntry<float> horizontalOffset = null!;
+    private ConfigEntry<float> spacing = null!;
+    private ConfigEntry<float> fontSize = null!;
 
     public string AccuracyFormat
     {
@@ -81,34 +81,67 @@ public class AdofaiQolMod : BaseUnityPlugin
     public float Spacing => spacing.Value;
     public float FontSize => fontSize.Value;
 
+    #endregion
+
+    #region State
+
+    private GameObject modCanvas = null!;
+
+    #endregion
+
+    #region State - ProgressDisplay
+
+    private GameObject? progressDisplay;
+
+    private TextMeshProUGUI? accuracy;
+    private TextMeshProUGUI? xAccuracy;
+    private TextMeshProUGUI? percentage;
+
+    #endregion
+
+
+    public static AdofaiQolMod Instance { get; private set; } = null!;
+    internal static new ManualLogSource Logger { get; private set; } = null!;
+    internal static Harmony? Harmony { get; set; }
+
     private void Awake()
     {
+        const string SECTION_GENERAL = "General";
+        const string SECTION_PROGRESS_DISPLAY = "ProgressDisplay";
+
         Logger = base.Logger;
         Instance = this;
 
-        hidePerfect = Config.Bind("General", "HidePerfect", true, "Hides the \"Perfect\" score");
+        hidePerfect = Config.Bind(
+            SECTION_GENERAL,
+            nameof(HidePerfect),
+            true,
+            "Hides the \"Perfect\" score"
+        );
+#if DEBUG
         overrideAllowDebug = Config.Bind(
-            "General",
-            "OverrideAllowDebug",
+            SECTION_GENERAL,
+            nameof(OverrideAllowDebug),
             true,
             "Force-enables debug features"
         );
+#endif
 
         accuracyFormat = Config.Bind(
-            "ProgressDisplay",
-            "AccuracyFormat",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(AccuracyFormat),
             "A: {0}",
             "How to format the accuracy display"
         );
         xAccuracyFormat = Config.Bind(
-            "ProgressDisplay",
-            "XAccuracyFormat",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(XAccuracyFormat),
             "X-A: {0}",
             "How to format the x-accuracy display"
         );
         percentageFormat = Config.Bind(
-            "ProgressDisplay",
-            "PercentageFormat",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(PercentageFormat),
             "P: {0}",
             "How to format the progress display"
         );
@@ -116,25 +149,35 @@ public class AdofaiQolMod : BaseUnityPlugin
         xAccuracyFormat.SettingChanged += LayoutSettingChanged;
         percentageFormat.SettingChanged += LayoutSettingChanged;
         anchor = Config.Bind(
-            "ProgressDisplay",
-            "Anchor",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(Anchor),
             TextAnchor.UpperLeft,
             "Where to anchor the progress display"
         );
         verticalOffset = Config.Bind(
-            "ProgressDisplay",
-            "VerticalOffset",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(VerticalOffset),
             0,
             "Y offset of the progress display"
         );
         horizontalOffset = Config.Bind(
-            "ProgressDisplay",
-            "HorizontalOffset",
+            SECTION_PROGRESS_DISPLAY,
+            nameof(HorizontalOffset),
             10f,
             "X offset of the progress display"
         );
-        spacing = Config.Bind("ProgressDisplay", "Spacing", 10f, "The space between values");
-        fontSize = Config.Bind("ProgressDisplay", "FontSize", 72f, "The font size");
+        spacing = Config.Bind(
+            SECTION_PROGRESS_DISPLAY,
+            nameof(Spacing),
+            10f,
+            "The space between values"
+        );
+        fontSize = Config.Bind(
+            SECTION_PROGRESS_DISPLAY,
+            nameof(FontSize),
+            72f,
+            "The font size of the progress display"
+        );
         anchor.SettingChanged += LayoutSettingChanged;
         verticalOffset.SettingChanged += LayoutSettingChanged;
         horizontalOffset.SettingChanged += LayoutSettingChanged;
@@ -168,26 +211,26 @@ public class AdofaiQolMod : BaseUnityPlugin
     {
 #if DEBUG
         Logger.LogDebug(
-            $">> RebuildProgressDisplay() modCanvas:{modCanvas} progressDisplay:{progressDisplay} "
+            $">> {nameof(RebuildProgressDisplay)}() {nameof(modCanvas)}:{modCanvas} {nameof(progressDisplay)}:{progressDisplay} "
         );
 #endif
-        Destroy(progressDisplay?.gameObject);
-        var container = new GameObject("ProgressDisplay", typeof(RectTransform));
-        progressDisplay = (RectTransform)container.transform;
-        progressDisplay.pivot = progressDisplay.anchorMin = Vector2.zero;
-        progressDisplay.anchorMax = Vector2.one;
-        progressDisplay.SetParent(modCanvas.transform, false);
-        progressDisplay.anchoredPosition = Vector2.zero;
-        progressDisplay.offsetMin = new Vector2(HorizontalOffset, 0f);
-        progressDisplay.offsetMax = new Vector2(0f, -VerticalOffset);
-        var layout = container.AddComponent<VerticalLayoutGroup>();
+        Destroy(progressDisplay);
+        progressDisplay = new GameObject(nameof(progressDisplay), typeof(RectTransform));
+        var transform = (RectTransform)progressDisplay.transform;
+        transform.pivot = transform.anchorMin = Vector2.zero;
+        transform.anchorMax = Vector2.one;
+        transform.SetParent(modCanvas.transform, false);
+        transform.anchoredPosition = Vector2.zero;
+        transform.offsetMin = new Vector2(HorizontalOffset, 0f);
+        transform.offsetMax = new Vector2(0f, -VerticalOffset);
+        var layout = progressDisplay.AddComponent<VerticalLayoutGroup>();
         layout.spacing = Spacing;
         layout.childForceExpandHeight = false;
         layout.childAlignment = Anchor;
         if (!string.IsNullOrWhiteSpace(AccuracyFormat))
         {
-            var accuracyObject = new GameObject("Accuracy", typeof(RectTransform));
-            ((RectTransform)accuracyObject.transform).SetParent(progressDisplay, false);
+            var accuracyObject = new GameObject(nameof(accuracy), typeof(RectTransform));
+            ((RectTransform)accuracyObject.transform).SetParent(transform, false);
             accuracy = accuracyObject.AddComponent<TextMeshProUGUI>();
             accuracy.fontSize = FontSize;
         }
@@ -198,8 +241,8 @@ public class AdofaiQolMod : BaseUnityPlugin
 
         if (!string.IsNullOrWhiteSpace(XAccuracyFormat))
         {
-            var xAccuracyObject = new GameObject("XAccuracy", typeof(RectTransform));
-            ((RectTransform)xAccuracyObject.transform).SetParent(progressDisplay, false);
+            var xAccuracyObject = new GameObject(nameof(xAccuracy), typeof(RectTransform));
+            ((RectTransform)xAccuracyObject.transform).SetParent(transform, false);
             xAccuracy = xAccuracyObject.AddComponent<TextMeshProUGUI>();
             xAccuracy.fontSize = FontSize;
         }
@@ -210,8 +253,8 @@ public class AdofaiQolMod : BaseUnityPlugin
 
         if (!string.IsNullOrWhiteSpace(PercentageFormat))
         {
-            var percentageObject = new GameObject("Percentage", typeof(RectTransform));
-            ((RectTransform)percentageObject.transform).SetParent(progressDisplay, false);
+            var percentageObject = new GameObject(nameof(percentage), typeof(RectTransform));
+            ((RectTransform)percentageObject.transform).SetParent(transform, false);
             percentage = percentageObject.AddComponent<TextMeshProUGUI>();
             percentage.fontSize = FontSize;
         }
@@ -235,7 +278,7 @@ public class AdofaiQolMod : BaseUnityPlugin
         const string INVALID = "<i>Invalid format string</i>";
 #if DEBUG
         Logger.LogDebug(
-            $">> UpdateProgressDisplay(accuracyValue: {accuracyValue}, xAccuracyValue: {xAccuracyValue}, percentageValue: {percentageValue}) accuracy:{accuracy} xAccuracy:{xAccuracy} percentage:{percentage}"
+            $">> {nameof(UpdateProgressDisplay)}({nameof(accuracyValue)}: {accuracyValue}, {nameof(xAccuracyValue)}: {xAccuracyValue}, {nameof(percentageValue)}: {percentageValue}) {nameof(accuracy)}:{accuracy} {nameof(xAccuracy)}:{xAccuracy} {nameof(percentage)}:{percentage}"
         );
 #endif
         if (accuracy != null)
@@ -276,7 +319,7 @@ public class AdofaiQolMod : BaseUnityPlugin
     {
 #if DEBUG
         Logger.LogDebug(
-            $">> UpdateProgressDisplay(show: {show}) progressDisplay:{progressDisplay} accuracy:{accuracy} xAccuracy:{xAccuracy} percentage:{percentage}"
+            $">> {nameof(UpdateProgressDisplay)}({nameof(show)}: {show}) {nameof(progressDisplay)}:{progressDisplay}"
         );
 #endif
         progressDisplay?.gameObject.SetActive(show);
@@ -296,7 +339,7 @@ public class AdofaiQolMod : BaseUnityPlugin
     private void UpdateProgressDisplay(scrController __instance)
     {
 #if DEBUG
-        Logger.LogDebug($">> UpdateProgressDisplay(__instance: {__instance})");
+        Logger.LogDebug($">> {nameof(UpdateProgressDisplay)}({nameof(__instance)}: {__instance})");
 #endif
 
         if (!__instance.gameworld)

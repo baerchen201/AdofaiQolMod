@@ -1,3 +1,4 @@
+#if DEBUG
 using HarmonyLib;
 
 namespace AdofaiQolMod.Patches;
@@ -5,9 +6,15 @@ namespace AdofaiQolMod.Patches;
 [HarmonyPatch(typeof(GCS), nameof(GCS.allowDebug), MethodType.Getter)]
 internal static class GCS_allowDebug
 {
-    private static void Postfix(ref bool __result)
+    private static bool Prefix(ref bool __result)
     {
         if (AdofaiQolMod.Instance.OverrideAllowDebug)
+        {
             __result = true;
+            return false;
+        }
+
+        return true;
     }
 }
+#endif
