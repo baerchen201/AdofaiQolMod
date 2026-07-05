@@ -214,6 +214,8 @@ public class AdofaiQolMod : BaseUnityPlugin
             $">> {nameof(RebuildProgressDisplay)}() {nameof(modCanvas)}:{modCanvas} {nameof(progressDisplay)}:{progressDisplay} "
         );
 #endif
+        var show = progressDisplay != null && progressDisplay.activeSelf;
+
         Destroy(progressDisplay);
         progressDisplay = new GameObject(nameof(progressDisplay), typeof(RectTransform));
         var transform = (RectTransform)progressDisplay.transform;
@@ -263,7 +265,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             percentage = null;
         }
 
-        UpdateProgressDisplay();
+        UpdateProgressDisplay(show);
     }
 
 #if !DEBUG
