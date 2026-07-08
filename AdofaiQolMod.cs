@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using ADOFAI;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -83,6 +85,28 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     #endregion
 
+    #region Config - SuppressEvents
+
+    private readonly Dictionary<LevelEventType, ConfigEntry<bool>> suppressEvents = new();
+
+    public bool SuppressEvent(LevelEventType eventType)
+    {
+        return suppressEvents.TryGetValue(eventType, out var configEntry) && configEntry.Value;
+    }
+
+    #endregion
+
+    #region Config - SuppressFilters
+
+    private readonly Dictionary<Filter, ConfigEntry<bool>> suppressFilters = new();
+
+    public bool SuppressFilter(Filter filter)
+    {
+        return suppressFilters.TryGetValue(filter, out var configEntry) && configEntry.Value;
+    }
+
+    #endregion
+
     #region State
 
     private GameObject modCanvas = null!;
@@ -108,6 +132,8 @@ public class AdofaiQolMod : BaseUnityPlugin
     {
         const string SECTION_GENERAL = "General";
         const string SECTION_PROGRESS_DISPLAY = "ProgressDisplay";
+        const string SECTION_SUPPRESS_EVENTS = "SuppressEvents";
+        const string SECTION_SUPPRESS_FILTERS = "SuppressFilters";
 
         Logger = base.Logger;
         Instance = this;
@@ -190,6 +216,21 @@ public class AdofaiQolMod : BaseUnityPlugin
 
         RebuildProgressDisplay();
         UpdateProgressDisplay(false);
+
+        foreach (LevelEventType eventType in Enum.GetValues(typeof(LevelEventType)))
+            suppressEvents[eventType] = Config.Bind(
+                SECTION_SUPPRESS_EVENTS,
+                eventType.ToString(),
+                false,
+                $"Suppresses all events of type {eventType}"
+            );
+        foreach (Filter filter in Enum.GetValues(typeof(Filter)))
+            suppressFilters[filter] = Config.Bind(
+                SECTION_SUPPRESS_FILTERS,
+                filter.ToString(),
+                false,
+                $"Suppresses all filters of type {filter}"
+            );
 
         Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
         Logger.LogDebug("Patching...");
