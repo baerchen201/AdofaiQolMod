@@ -8,6 +8,6 @@ internal static class scnGame_ApplyEvent
 {
     private static bool Prefix(ref LevelEvent evnt)
     {
-        return AdofaiQolMod.Instance.AllowEvent(evnt.eventType);
+        return AdofaiQolMod.Instance.AllowEvent(evnt);
     }
 }

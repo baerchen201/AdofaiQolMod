@@ -392,16 +392,15 @@ public class AdofaiQolMod : BaseUnityPlugin
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public bool AllowEvent(LevelEventType eventType)
+    public bool AllowEvent(LevelEvent evnt)
     {
         if (!LDMLevel)
             return true;
-        switch (eventType)
+        switch (evnt.eventType)
         {
             // TODO: investigate RepeatEvents and SetFrameRate
 
             case LevelEventType.Bloom:
-            case LevelEventType.Flash:
             case LevelEventType.HallOfMirrors:
             case LevelEventType.ScreenScroll:
             case LevelEventType.ScreenTile:
@@ -409,6 +408,9 @@ public class AdofaiQolMod : BaseUnityPlugin
             case LevelEventType.SetFilterAdvanced:
             case LevelEventType.ShakeScreen:
                 return false;
+
+            case LevelEventType.Flash:
+                return (FlashPlane)evnt["plane"] != FlashPlane.Foreground;
 
             default:
                 return true;
