@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using ADOFAI;
 using BepInEx;
@@ -22,7 +21,16 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     #region Config - General
 
+    [Obsolete("Unused cause i'm too lazy to implement proper layout mode")]
+    public enum LDMLevels
+    {
+        None,
+        LowDetail,
+        Layout,
+    }
+
     private ConfigEntry<bool> hidePerfect = null!;
+    private ConfigEntry<bool> ldmLevel = null!;
 #if DEBUG
     private ConfigEntry<bool> overrideAllowDebug = null!;
 #endif
@@ -33,6 +41,14 @@ public class AdofaiQolMod : BaseUnityPlugin
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         get => hidePerfect.Value;
+    }
+
+    public bool LDMLevel
+    {
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        get => ldmLevel.Value;
     }
 
 #if DEBUG
@@ -85,28 +101,6 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     #endregion
 
-    #region Config - SuppressEvents
-
-    private readonly Dictionary<LevelEventType, ConfigEntry<bool>> suppressEvents = new();
-
-    public bool SuppressEvent(LevelEventType eventType)
-    {
-        return suppressEvents.TryGetValue(eventType, out var configEntry) && configEntry.Value;
-    }
-
-    #endregion
-
-    #region Config - SuppressFilters
-
-    private readonly Dictionary<Filter, ConfigEntry<bool>> suppressFilters = new();
-
-    public bool SuppressFilter(Filter filter)
-    {
-        return suppressFilters.TryGetValue(filter, out var configEntry) && configEntry.Value;
-    }
-
-    #endregion
-
     #region State
 
     private GameObject modCanvas = null!;
@@ -132,8 +126,6 @@ public class AdofaiQolMod : BaseUnityPlugin
     {
         const string SECTION_GENERAL = "General";
         const string SECTION_PROGRESS_DISPLAY = "ProgressDisplay";
-        const string SECTION_SUPPRESS_EVENTS = "SuppressEvents";
-        const string SECTION_SUPPRESS_FILTERS = "SuppressFilters";
 
         Logger = base.Logger;
         Instance = this;
@@ -143,6 +135,12 @@ public class AdofaiQolMod : BaseUnityPlugin
             nameof(HidePerfect),
             true,
             "Hides the \"Perfect\" score"
+        );
+        ldmLevel = Config.Bind(
+            SECTION_GENERAL,
+            nameof(LDMLevel),
+            false,
+            "Disables some effects and filters for better performance and visibility"
         );
 #if DEBUG
         overrideAllowDebug = Config.Bind(
@@ -216,21 +214,6 @@ public class AdofaiQolMod : BaseUnityPlugin
 
         RebuildProgressDisplay();
         UpdateProgressDisplay(false);
-
-        foreach (LevelEventType eventType in Enum.GetValues(typeof(LevelEventType)))
-            suppressEvents[eventType] = Config.Bind(
-                SECTION_SUPPRESS_EVENTS,
-                eventType.ToString(),
-                false,
-                $"Suppresses all events of type {eventType}"
-            );
-        foreach (Filter filter in Enum.GetValues(typeof(Filter)))
-            suppressFilters[filter] = Config.Bind(
-                SECTION_SUPPRESS_FILTERS,
-                filter.ToString(),
-                false,
-                $"Suppresses all filters of type {filter}"
-            );
 
         Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
         Logger.LogDebug("Patching...");
@@ -404,6 +387,32 @@ public class AdofaiQolMod : BaseUnityPlugin
     private void LayoutSettingChanged(object _, EventArgs e)
     {
         RebuildProgressDisplay();
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public bool AllowEvent(LevelEventType eventType)
+    {
+        if (!LDMLevel)
+            return true;
+        switch (eventType)
+        {
+            // TODO: investigate RepeatEvents and SetFrameRate
+
+            case LevelEventType.Bloom:
+            case LevelEventType.Flash:
+            case LevelEventType.HallOfMirrors:
+            case LevelEventType.ScreenScroll:
+            case LevelEventType.ScreenTile:
+            case LevelEventType.SetFilter:
+            case LevelEventType.SetFilterAdvanced:
+            case LevelEventType.ShakeScreen:
+                return false;
+
+            default:
+                return true;
+        }
     }
 
     public static string GetVersionText()
