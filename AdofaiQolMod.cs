@@ -21,14 +21,6 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     #region Config - General
 
-    [Obsolete("Unused cause i'm too lazy to implement proper layout mode")]
-    public enum LDMLevels
-    {
-        None,
-        LowDetail,
-        Layout,
-    }
-
     private ConfigEntry<bool> hidePerfect = null!;
     private ConfigEntry<bool> ldmLevel = null!;
 #if DEBUG
@@ -105,6 +97,8 @@ public class AdofaiQolMod : BaseUnityPlugin
 
     private GameObject modCanvas = null!;
 
+    internal bool useLDM;
+
     #endregion
 
     #region State - ProgressDisplay
@@ -140,7 +134,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             SECTION_GENERAL,
             nameof(LDMLevel),
             false,
-            "Disables some effects and filters for better performance and visibility"
+            "Disables some effects and filters in custom levels for better performance and visibility"
         );
 #if DEBUG
         overrideAllowDebug = Config.Bind(
@@ -394,7 +388,7 @@ public class AdofaiQolMod : BaseUnityPlugin
 #endif
     public bool AllowEvent(LevelEvent evnt)
     {
-        if (!LDMLevel)
+        if (!useLDM)
             return true;
         switch (evnt.eventType)
         {
