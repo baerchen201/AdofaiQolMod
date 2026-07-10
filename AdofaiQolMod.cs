@@ -392,14 +392,13 @@ public class AdofaiQolMod : BaseUnityPlugin
             return true;
         switch (evnt.eventType)
         {
-            // TODO: investigate RepeatEvents and SetFrameRate
-
             case LevelEventType.Bloom:
             case LevelEventType.HallOfMirrors:
             case LevelEventType.ScreenScroll:
             case LevelEventType.ScreenTile:
             case LevelEventType.SetFilter:
             case LevelEventType.SetFilterAdvanced:
+            case LevelEventType.SetFrameRate:
             case LevelEventType.ShakeScreen:
                 return false;
 
