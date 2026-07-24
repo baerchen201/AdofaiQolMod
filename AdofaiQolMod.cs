@@ -55,7 +55,9 @@ public class AdofaiQolMod : BaseUnityPlugin
     private ConfigEntry<string> xAccuracyFormat = null!;
     private ConfigEntry<string> percentageFormat = null!;
 
+#if DEBUG
     private ConfigEntry<TextAnchor> anchor = null!;
+#endif
     private ConfigEntry<int> verticalOffset = null!;
     private ConfigEntry<float> horizontalOffset = null!;
     private ConfigEntry<float> spacing = null!;
@@ -85,7 +87,12 @@ public class AdofaiQolMod : BaseUnityPlugin
         get => percentageFormat.Value;
     }
 
-    public TextAnchor Anchor => anchor.Value;
+    public TextAnchor Anchor =>
+#if DEBUG
+        anchor.Value;
+#else
+        TextAnchor.UpperLeft;
+#endif
     public int VerticalOffset => verticalOffset.Value;
     public float HorizontalOffset => horizontalOffset.Value;
     public float Spacing => spacing.Value;
@@ -166,12 +173,14 @@ public class AdofaiQolMod : BaseUnityPlugin
         accuracyFormat.SettingChanged += LayoutSettingChanged;
         xAccuracyFormat.SettingChanged += LayoutSettingChanged;
         percentageFormat.SettingChanged += LayoutSettingChanged;
+#if DEBUG
         anchor = Config.Bind(
             SECTION_PROGRESS_DISPLAY,
             nameof(Anchor),
             TextAnchor.UpperLeft,
             "Where to anchor the progress display"
         );
+#endif
         verticalOffset = Config.Bind(
             SECTION_PROGRESS_DISPLAY,
             nameof(VerticalOffset),
@@ -196,7 +205,9 @@ public class AdofaiQolMod : BaseUnityPlugin
             72f,
             "The font size of the progress display"
         );
+#if DEBUG
         anchor.SettingChanged += LayoutSettingChanged;
+#endif
         verticalOffset.SettingChanged += LayoutSettingChanged;
         horizontalOffset.SettingChanged += LayoutSettingChanged;
         spacing.SettingChanged += LayoutSettingChanged;
@@ -246,7 +257,7 @@ public class AdofaiQolMod : BaseUnityPlugin
         var layout = progressDisplay.AddComponent<VerticalLayoutGroup>();
         layout.spacing = Spacing;
         layout.childForceExpandHeight = false;
-        layout.childAlignment = Anchor;
+        layout.childAlignment = Anchor; // TODO: FIX this not working
         if (!string.IsNullOrWhiteSpace(AccuracyFormat))
         {
             var accuracyObject = new GameObject(nameof(accuracy), typeof(RectTransform));
