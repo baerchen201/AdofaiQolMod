@@ -47,10 +47,7 @@ internal static class scnCLS_EnterLevel
 
         try
         {
-            SteamUGC.StartPlaytimeTracking(
-                [new PublishedFileId_t(ulong.Parse(__instance.levelToSelect))],
-                1
-            );
+            SteamUGC.Internal.StartPlaytimeTracking([ulong.Parse(__instance.levelToSelect)], 1);
 #if DEBUG
             AdofaiQolMod.Logger.LogDebug(
                 $"Started playtime tracking for level {__instance.levelToSelect}"
