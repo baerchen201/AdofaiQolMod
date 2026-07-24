@@ -257,12 +257,21 @@ public class AdofaiQolMod : BaseUnityPlugin
         var layout = progressDisplay.AddComponent<VerticalLayoutGroup>();
         layout.spacing = Spacing;
         layout.childForceExpandHeight = false;
-        layout.childAlignment = Anchor; // TODO: FIX this not working
+        layout.childAlignment = Anchor;
+        var textAlignment = Anchor switch
+        {
+            TextAnchor.UpperCenter or TextAnchor.MiddleCenter or TextAnchor.LowerCenter =>
+                TextAlignmentOptions.Center,
+            TextAnchor.UpperRight or TextAnchor.MiddleRight or TextAnchor.LowerRight =>
+                TextAlignmentOptions.Right,
+            _ => TextAlignmentOptions.Left,
+        };
         if (!string.IsNullOrWhiteSpace(AccuracyFormat))
         {
             var accuracyObject = new GameObject(nameof(accuracy), typeof(RectTransform));
             ((RectTransform)accuracyObject.transform).SetParent(transform, false);
             accuracy = accuracyObject.AddComponent<TextMeshProUGUI>();
+            accuracy.alignment = textAlignment;
             accuracy.fontSize = FontSize;
         }
         else
@@ -275,6 +284,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             var xAccuracyObject = new GameObject(nameof(xAccuracy), typeof(RectTransform));
             ((RectTransform)xAccuracyObject.transform).SetParent(transform, false);
             xAccuracy = xAccuracyObject.AddComponent<TextMeshProUGUI>();
+            xAccuracy.alignment = textAlignment;
             xAccuracy.fontSize = FontSize;
         }
         else
@@ -287,6 +297,7 @@ public class AdofaiQolMod : BaseUnityPlugin
             var percentageObject = new GameObject(nameof(percentage), typeof(RectTransform));
             ((RectTransform)percentageObject.transform).SetParent(transform, false);
             percentage = percentageObject.AddComponent<TextMeshProUGUI>();
+            percentage.alignment = textAlignment;
             percentage.fontSize = FontSize;
         }
         else
